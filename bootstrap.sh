@@ -1,18 +1,11 @@
 #!/usr/bin/env bash
 
+set -Eeuo pipefail
+
 # read default env
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 . "${script_dir}/ENV"
 export $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${script_dir}/ENV")
-
-set -Eeuo pipefail
-trap cleanup SIGINT SIGTERM ERR EXIT
-
-cleanup() {
-  trap - SIGINT SIGTERM ERR EXIT
-  # script cleanup here
-}
-
 
 usage() {
   cat <<EOF

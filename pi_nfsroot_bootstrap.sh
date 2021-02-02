@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -Eeuo pipefail
+
 if [[ ! -f /etc/exports ]]; then
 	echo "No exports. Install nfs server first!"
 	echo
@@ -7,6 +9,13 @@ if [[ ! -f /etc/exports ]]; then
 fi
 
 pwd=$(pwd)
+
+trap cleanup SIGINT SIGTERM ERR EXIT
+cleanup() {
+	trap - SIGINT SIGTERM ERR EXIT
+	cd "${pwd}"
+	exit
+}
 
 TARGET_PATH=$(realpath "${TARGET_PATH}")
 echo "Bootstraping pi to nfsroot '${TARGET_PATH}'"
@@ -37,6 +46,7 @@ cd ..
 if [[ "${RO_ROOT-}" == "yes" ]]; then
 	# use custom init for ro root
 	INIT="init=/bin/ro-root.sh"
+	RORW="ro"
 
 	# install ro-root
 	curl https://gist.githubusercontent.com/emsi/3c7143f0583566aad14bad182297a104/raw/ -o bin/ro-root.sh
@@ -49,7 +59,8 @@ if [[ "${RO_ROOT-}" == "yes" ]]; then
 	# install netflap reboot watchdog service
 	curl https://gist.githubusercontent.com/emsi/27de391670bc4130a521317323628bfa/raw/netflapdog.service -o lib/systemd/system/netflapdog.service
 	ln -sf /lib/systemd/system/netflapdog.service etc/systemd/system/sysinit.target.wants/netflapdog.service
-	
+else
+	RORW="rw"
 fi
 
 # customize cmdline.txt
@@ -75,9 +86,7 @@ sed -i etc/default/keyboard -e "s/^XKBLAYOUT.*/XKBLAYOUT=\"$KEYMAP\"/"
 
 # Change locale
 #
-LOCALE_LINE="$(grep "^$LOCALE " usr/share/i18n/SUPPORTED)"
-ENCODING="$(echo $LOCALE_LINE | cut -f2 -d " ")"
-echo "$LOCALE $ENCODING" > etc/locale.gen
+echo "$LOCALE" > etc/locale.gen
 sed -i "s/^\s*LANG=\S*/LANG=$LOCALE/" etc/default/locale
 
 # Change timezone
@@ -140,7 +149,9 @@ ln -sf /lib/systemd/system/ssh.service etc/systemd/system/multi-user.target.want
 
 
 # add export path
-sed -i "#^${TARGET_PATH} #d" /etc/exports
+ESCAPED_PATH=$(echo "${TARGET_PATH}" | sed 's/\//\\\//g')
+sed -i "/^${ESCAPED_PATH=} /d" /etc/exports
 echo "${TARGET_PATH} ${ALLOW_NET}(${RORW},sync,no_subtree_check,no_root_squash)" >> /etc/exports
+systemctl restart nfs-kernel-server
 
 cd "$pwd"
