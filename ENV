@@ -1,0 +1,17 @@
+# Bootstrap into current folder
+TARGET_PATH="."
+
+# The NFS root path and enable read only root
+NFSROOT="10.168.1.41:/nfsroot/raspios_lite"
+RO_ROOT="yes"
+
+# locale
+KEYMAP="us"
+LOCALE="C.UTF-8"
+TIMEZONE="Europe/Warsaw"
+
+# config.txt
+SPI_ON="yes"
+
+# perform fresh download
+DOWNLOAD="yes"
