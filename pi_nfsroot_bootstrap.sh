@@ -6,6 +6,8 @@ if [[ ! -f /etc/exports ]]; then
 	exit -1
 fi
 
+pwd=$(pwd)
+
 TARGET_PATH=$(realpath "${TARGET_PATH}")
 echo "Bootstraping pi to nfsroot '${TARGET_PATH}'"
 mkdir -p "${TARGET_PATH}"
@@ -138,6 +140,7 @@ ln -sf /lib/systemd/system/ssh.service etc/systemd/system/multi-user.target.want
 
 
 # add export path
-sed -i "/^${TARGET_PATH} /d"
-echo "${TARGET_PATH} ${ALLOW_NET}(${RORW},sync,no_subtree_check,no_root_squash)" > /etc/exports
+sed -i "#^${TARGET_PATH} #d" /etc/exports
+echo "${TARGET_PATH} ${ALLOW_NET}(${RORW},sync,no_subtree_check,no_root_squash)" >> /etc/exports
 
+cd "$pwd"
