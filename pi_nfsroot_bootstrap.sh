@@ -1,59 +1,72 @@
 #!/bin/bash
 
-echo "AAA"
-exit
-
-# Set the NFS root path
-if [[ -z "${NFSROOT-}" ]]; then
-	NFSROOT="10.168.1.41:/nfsroot/raspios_lite"
+if [[ ! -f /etc/exports ]]; then
+	echo "No exports. Install nfs server first!"
+	echo
+	exit -1
 fi
 
-# set localization
-KEYMAP="us"
-LOCALE="C.UTF-8"
-TIMEZONE="Europe/Warsaw"
+TARGET_PATH=$(realpath "${TARGET_PATH}")
+echo "Bootstraping pi to nfsroot '${TARGET_PATH}'"
+mkdir -p "${TARGET_PATH}"
+cd "${TARGET_PATH}"
 
-# download root
-wget https://downloads.raspberrypi.org/raspios_lite_armhf/root.tar.xz
+# obtaining and extracting root
+if [[ "${DOWNLOAD-}" == "yes" ]]; then
+	wget https://downloads.raspberrypi.org/raspios_lite_armhf/root.tar.xz
+fi
 tar Jxf root.tar.xz --checkpoint=1000 --checkpoint-action=dot
 #rm root.tar.xz
 
-# download boot
+# obtainng and extracting boot
+if [[ "${DOWNLOAD-}" == "yes" ]]; then
+	wget https://downloads.raspberrypi.org/raspios_lite_armhf/boot.tar.xz
+fi
 cd boot
-wget https://downloads.raspberrypi.org/raspios_lite_armhf/boot.tar.xz
-tar Jxvf boot.tar.xz
+tar Jxvf ../boot.tar.xz
 #rm boot.tar.xz
 cd ..
+
 
 #
 # Customizations
 #
 
+if [[ "${RO_ROOT-}" == "yes" ]]; then
+	# use custom init for ro root
+	INIT="init=/bin/ro-root.sh"
+
+	# install ro-root
+	curl https://gist.githubusercontent.com/emsi/3c7143f0583566aad14bad182297a104/raw/ -o bin/ro-root.sh
+	chmod +x bin/ro-root.sh
+
+	# install netflap reboot watchdog script
+	curl https://gist.githubusercontent.com/emsi/899505583dcaeda65b9bab2d5dee9008/raw/netflapdog.py -o bin/netflapdog.py
+	chmod +x bin/netflapdog.py
+	
+	# install netflap reboot watchdog service
+	curl https://gist.githubusercontent.com/emsi/27de391670bc4130a521317323628bfa/raw/netflapdog.service -o lib/systemd/system/netflapdog.service
+	ln -sf /lib/systemd/system/netflapdog.service etc/systemd/system/sysinit.target.wants/netflapdog.service
+	
+fi
+
 # customize cmdline.txt
-echo "console=serial0,115200 console=tty1 rootwait ro nfsroot=${NFSROOT},v3 ip=dhcp root=/dev/nfs elevator=deadline plymouth.ignore-serial-consoles init=/bin/ro-root.sh" > boot/cmdline.txt
+echo "console=serial0,115200 console=tty1 rootwait ro nfsroot=${NFSROOT},v3 ip=dhcp root=/dev/nfs elevator=deadline plymouth.ignore-serial-consoles ${INIT-}" > boot/cmdline.txt
 
 # customize config.txt (enable spi)
-sed -i -e 's/^#\(dtparam=spi=on\)/\1/' boot/config.txt
+if [[ "${SPI_ON-}" == "yes" ]]; then
+	sed -i -e 's/^#\(dtparam=spi=on\)/\1/' boot/config.txt
+fi
 
 # do not resize root
 rm etc/rc3.d/S01resize2fs_once
 
 # clean fstab (without refference to sd card)
 echo "proc            /proc           proc    defaults          0       0" > etc/fstab
-# this line is not strictly required when ro-root.sh is used for root overlay
-echo "${NFSROOT}       /       nfs     nfsvers=3,tcp   0       1" >> etc/fstab
-
-# install ro-root
-curl https://gist.githubusercontent.com/emsi/3c7143f0583566aad14bad182297a104/raw/ -o bin/ro-root.sh
-chmod +x bin/ro-root.sh
-
-# install netflap reboot watchdog script
-curl https://gist.githubusercontent.com/emsi/899505583dcaeda65b9bab2d5dee9008/raw/netflapdog.py -o bin/netflapdog.py
-chmod +x bin/netflapdog.py
-
-# install netflap reboot watchdog service
-curl https://gist.githubusercontent.com/emsi/27de391670bc4130a521317323628bfa/raw/netflapdog.service -o lib/systemd/system/netflapdog.service
-ln -sf /lib/systemd/system/netflapdog.service etc/systemd/system/sysinit.target.wants/netflapdog.service
+# this line is not required when ro-root.sh is used for root overlay
+if [[ -z "${RO_ROOT-}" ]]; then
+	echo "${NFSROOT}       /       nfs     nfsvers=3,tcp   0       1" >> etc/fstab
+fi
 
 # Change keyboard
 sed -i etc/default/keyboard -e "s/^XKBLAYOUT.*/XKBLAYOUT=\"$KEYMAP\"/"
@@ -123,4 +136,8 @@ ssh-keygen -A -v -f .
 # Enable sshd
 ln -sf /lib/systemd/system/ssh.service etc/systemd/system/multi-user.target.wants/ssh.service
 
+
+# add export path
+sed -i "/^${TARGET_PATH} /d"
+echo "${TARGET_PATH} ${ALLOW_NET}(${RORW},sync,no_subtree_check,no_root_squash)" > /etc/exports
 

@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# read default env
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
+. "${script_dir}/ENV"
+export $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${script_dir}/ENV")
+
 set -Eeuo pipefail
 trap cleanup SIGINT SIGTERM ERR EXIT
 
@@ -8,9 +13,10 @@ cleanup() {
   # script cleanup here
 }
 
+
 usage() {
   cat <<EOF
-Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-v] [-d] target_path
+Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-v] [-d] [-D] [-R] [--nfs-root nfs_path] target_path
 
 Raspberry pi nfsroot bootstrap script.
 
@@ -20,7 +26,8 @@ Available options:
 -v, --verbose       Print verbose info (implies dry run)
 -d, --debug         Print debug (each run command)
 -D, --no-download   Don't download new dist files (fils if not previously downloaded)
--p, --param         Some param description
+-R, --no-ro-root    Don't enabkle read only root with overlay
+    --nfs-root      Set nfs root path
 EOF
 }
 
@@ -44,7 +51,9 @@ parse_params() {
     -h | --help) usage && exit ;;
     -d | --debug) set -x ;;
     -v | --verbose) verbose=1 ;;
-    -D | --no-download) export NO_DOWNLOAD=1 ;; 
+    -D | --no-download) export DOWNLOAD="no" ;; 
+    -R | --no-ro-root) export RO_ROOT="no" ;;
+    --nfs-root) export NFSROOT="${2-}" && shift ;;
     -?*) die "Unknown option: $1" ;;
     *) break ;;
     esac
@@ -61,17 +70,16 @@ parse_params() {
 
 parse_params "$@"
 
-BOOTSTRAP="pi_nfsroot_bootstrap.sh"
-export TARGET_PATH="${args[0]}"
+
+BOOTSTRAP="${script_dir}/pi_nfsroot_bootstrap.sh"
+TARGET_PATH="${args[0]}"
+export TARGET_PATH=$(realpath "${TARGET_PATH}")
 
 if [[ -n "${verbose-}" ]]; then
-	echo "NO_DOWNLOAD=${NO_DOWNLOAD-}"
-	echo "TARGET_PATH=${TARGET_PATH}"
+	env | grep $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${script_dir}/ENV" | sed -e ':a; N; $!ba; s/\n/\\\|/g')
 
 	exit
 fi
 
+
 [[ -x "${BOOTSTRAP}" ]] && "${BOOTSTRAP}"
-
-
-
