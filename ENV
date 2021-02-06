@@ -1,3 +1,7 @@
+# Raspios version
+# atm raspios_lite_armhf or raspios_full_armhf 
+RASPIOS_VERSION="raspios_lite_armhf"
+
 # Bootstrap into current folder
 TARGET_PATH="."
 
@@ -13,5 +17,8 @@ TIMEZONE="Europe/Warsaw"
 # config.txt
 SPI_ON="yes"
 
-# perform fresh download
+# perform fresh download 
+# you can set to "no" if files are already downloaded
+# e.g. you want to perform bootstrapping again with differenet settings
+# other than that it's mostly for developement purposes.
 DOWNLOAD="yes"
