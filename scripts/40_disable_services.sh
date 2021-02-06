@@ -7,32 +7,32 @@ fi
 
 TARGET_PATH=$(realpath "${TARGET_PATH}")
 
-# Disable cron service 
+echo Disabling cron service 
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/cron.service"
-rm "${TARGET_PATH}/etc/cron.daily/*"
-rm "${TARGET_PATH}/etc/cron.weekly/*"
+rm "${TARGET_PATH}/etc/cron.daily/"*
+rm "${TARGET_PATH}/etc/cron.weekly/"*
 
-# Disable eepropm update
+echo Disabling eepropm update
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/rpi-eeprom-update.service"
 
-# Disable raspi-config (like boot with shift)
+echo Disabling raspi-config
 rm "${TARGET_PATH}/etc/init.d/raspi-config"
 
-# Disable swap service
+echo Disabling swap service
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/dphys-swapfile.service"
 
-# Disable upgrade services
+echo Disabling upgrade services
 rm "${TARGET_PATH}/etc/systemd/system/timers.target.wants/apt-daily-upgrade.timer"
 rm "${TARGET_PATH}/etc/systemd/system/timers.target.wants/apt-daily.timer"
 
-# Disable manpage cache
+echo Disabling manpage cache
 rm "${TARGET_PATH}/etc/systemd/system/timers.target.wants/man-db.timer"
 
-# Disable triggerhappy
+echo Disabling triggerhappy
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/triggerhappy.service"
 rm "${TARGET_PATH}/etc/systemd/system/sockets.target.wants/triggerhappy.socket"
 
-# Disable WIFI and BT
+echo Disabling WIFI and BT
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/wpa_supplicant.service"
 rm "${TARGET_PATH}/etc/systemd/system/bluetooth.target.wants/bluetooth.service"
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/hciuart.service"
@@ -43,10 +43,10 @@ blacklist btbcm
 blacklist hci_uart
 EOF
 
-# Disable avahi multicast DNS
+echo Disabling avahi multicast DNS
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/avahi-daemon.service"
 rm "${TARGET_PATH}/etc/systemd/system/sockets.target.wants/avahi-daemon.socket"
 
-# Disable sshswitch (turning on sshd if /boot/ssh is present)
+echo "Disabling sshswitch (service that tirns on sshd if /boot/ssh is present)"
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/sshswitch.service"
 
