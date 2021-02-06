@@ -1,4 +1,9 @@
 #!/bin/bash
+set -Eeuo pipefail
+
+if [[ "${DOWNLOAD-}" != "yes" ]]; then
+	exit
+fi
 
 if [[ -z "${TARGET_PATH-}" ]]; then
 	echo >&2 -e "TARGET_PATH not set!"
