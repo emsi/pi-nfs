@@ -9,7 +9,7 @@ export $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${script_dir}/E
 
 usage() {
   cat <<EOF
-Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-v] [-d] [-D] [-R] [--nfs-root nfs_path] target_path
+Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-v] [-d] [-D] [-R] target_path
 
 Raspberry pi nfsroot bootstrap script.
 
@@ -20,7 +20,6 @@ Available options:
 -d, --debug         Print debug (each run command)
 -D, --no-download   Don't download new dist files (fils if not previously downloaded)
 -R, --no-ro-root    Don't enabkle read only root with overlay
-    --nfs-root      Set nfs root path
 EOF
 }
 
@@ -46,7 +45,6 @@ parse_params() {
     -v | --verbose) verbose=1 ;;
     -D | --no-download) export DOWNLOAD="no" ;; 
     -R | --no-ro-root) export RO_ROOT="no" ;;
-    --nfs-root) export NFSROOT="${2-}" && shift ;;
     -?*) die "Unknown option: $1" ;;
     *) break ;;
     esac
@@ -64,9 +62,9 @@ parse_params() {
 parse_params "$@"
 
 
-BOOTSTRAP="${script_dir}/pi_nfsroot_bootstrap.sh"
 TARGET_PATH="${args[0]}"
 export TARGET_PATH=$(realpath "${TARGET_PATH}")
+NFSROOT="${NFS_IP}:${TARGET_PATH}"
 
 if [[ -n "${verbose-}" ]]; then
 	env | grep $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${script_dir}/ENV" | sed -e ':a; N; $!ba; s/\n/\\\|/g')
@@ -75,4 +73,8 @@ if [[ -n "${verbose-}" ]]; then
 fi
 
 
-[[ -x "${BOOTSTRAP}" ]] && "${BOOTSTRAP}"
+for script in "${script_dir}/scripts/"*; do
+	if [[ -x $script ]]; then
+		$script
+	fi
+done
