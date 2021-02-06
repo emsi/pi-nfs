@@ -25,7 +25,6 @@ TARGET_PATH=$(realpath "${TARGET_PATH}")
 if [[ "${RO_ROOT-}" == "yes" ]]; then
 	# use custom init for ro root
 	INIT="init=/bin/ro-root.sh"
-	RORW="ro"
 
 	echo installing ro-root
 	curl https://gist.githubusercontent.com/emsi/3c7143f0583566aad14bad182297a104/raw/ -o "${TARGET_PATH}/bin/ro-root.sh"
@@ -38,8 +37,6 @@ if [[ "${RO_ROOT-}" == "yes" ]]; then
 	echo installing netflap reboot watchdog service
 	curl https://gist.githubusercontent.com/emsi/27de391670bc4130a521317323628bfa/raw/netflapdog.service -o "${TARGET_PATH}/lib/systemd/system/netflapdog.service"
 	ln -sf /lib/systemd/system/netflapdog.service "${TARGET_PATH}/etc/systemd/system/sysinit.target.wants/netflapdog.service"
-else
-	RORW="rw"
 fi
 
 echo customizing cmdline.txt
