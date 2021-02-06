@@ -114,3 +114,9 @@ if [[ "${noarmscript-}" != "yes" ]]; then
 		fi
 	done
 fi
+
+if [[ "${settftproot-}" == "yes" ]]; then
+	echo "Making a link at /srv/tftp pointing to '${TARGET_PATH}/boot'"
+	rm -f /srv/tftp
+	ln -s "${TARGET_PATH}/boot" /srv/tftp
+fi
