@@ -9,6 +9,7 @@ TARGET_PATH=$(realpath "${TARGET_PATH}")
 
 echo "Extracting ${RASPIOS_VERSION} root to '${TARGET_PATH}'"
 tar Jxf "${TARGET_PATH}/root.tar.xz" --checkpoint=1000 --checkpoint-action=dot --directory "${TARGET_PATH}/"
-
-echo "Extracting ${RASPIOS_VERSION} boot to '${TARGET_PATH}'"
-tar Jxf "${TARGET_PATH}/boot.tar.xz" --checkpoint=1000 --checkpoint-action=dot --directory "${TARGET_PATH}/boot/"
+echo
+echo "Extracting ${RASPIOS_VERSION} boot to '${TARGET_PATH}/boot'"
+tar Jxf "${TARGET_PATH}/boot.tar.xz" --checkpoint=100 --checkpoint-action=dot --directory "${TARGET_PATH}/boot/"
+echo 
