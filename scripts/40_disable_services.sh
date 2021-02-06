@@ -1,4 +1,5 @@
 #!/bin/bash
+set -Eeuo pipefail
 
 if [[ -z "${TARGET_PATH-}" ]]; then
 	echo >&2 -e "TARGET_PATH not set!"
@@ -47,6 +48,6 @@ echo Disabling avahi multicast DNS
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/avahi-daemon.service"
 rm "${TARGET_PATH}/etc/systemd/system/sockets.target.wants/avahi-daemon.socket"
 
-echo "Disabling sshswitch (service that tirns on sshd if /boot/ssh is present)"
+echo "Disabling sshswitch (service that turns on sshd if /boot/ssh is present)"
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/sshswitch.service"
 
