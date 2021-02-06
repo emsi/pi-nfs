@@ -27,32 +27,33 @@ if [[ "${RO_ROOT-}" == "yes" ]]; then
 	INIT="init=/bin/ro-root.sh"
 	RORW="ro"
 
-	# install ro-root
+	echo installing ro-root
 	curl https://gist.githubusercontent.com/emsi/3c7143f0583566aad14bad182297a104/raw/ -o "${TARGET_PATH}/bin/ro-root.sh"
 	chmod +x "${TARGET_PATH}/bin/ro-root.sh"
 
-	# install netflap reboot watchdog script
+	echo installing netflap reboot watchdog script
 	curl https://gist.githubusercontent.com/emsi/899505583dcaeda65b9bab2d5dee9008/raw/netflapdog.py -o "${TARGET_PATH}/bin/netflapdog.py"
 	chmod +x "${TARGET_PATH}/bin/netflapdog.py"
 	
-	# install netflap reboot watchdog service
+	echo installing netflap reboot watchdog service
 	curl https://gist.githubusercontent.com/emsi/27de391670bc4130a521317323628bfa/raw/netflapdog.service -o "${TARGET_PATH}/lib/systemd/system/netflapdog.service"
 	ln -sf /lib/systemd/system/netflapdog.service "${TARGET_PATH}/etc/systemd/system/sysinit.target.wants/netflapdog.service"
 else
 	RORW="rw"
 fi
 
-# customize cmdline.txt
+echo customizing cmdline.txt
 echo "console=serial0,115200 console=tty1 rootwait ro nfsroot=${NFSROOT},v3 ip=dhcp root=/dev/nfs elevator=deadline plymouth.ignore-serial-consoles ${INIT-}" > "${TARGET_PATH}/boot/cmdline.txt"
 
-# customize config.txt (enable spi)
+echo customizing config.txt
 if [[ "${SPI_ON-}" == "yes" ]]; then
-	sed -i -e 's/^#\(dtparam=spi=on\)/\1/' "${TARGET_PATH}boot/config.txt"
+	sed -i -e 's/^#\(dtparam=spi=on\)/\1/' "${TARGET_PATH}/boot/config.txt"
 fi
 
-# do not resize root
+echo disabling root filesystem resize on first boot
 rm "${TARGET_PATH}/etc/rc3.d/S01resize2fs_once"
 
+echo setting up fstab
 # clean fstab (without refference to sd card)
 echo "proc            /proc           proc    defaults          0       0" > "${TARGET_PATH}/etc/fstab"
 # this line is not required when ro-root.sh is used for root overlay
