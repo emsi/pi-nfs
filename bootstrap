@@ -19,7 +19,10 @@ Available options:
 -v, --verbose       Print verbose info (implies dry run)
 -d, --debug         Print debug (each run command)
 -D, --no-download   Don't download new dist files (fils if not previously downloaded)
--R, --no-ro-root    Don't enabkle read only root with overlay
+-R, --no-ro-root    Don't enable read only root with overlay
+-S, --no-scripts    Don't run scripts from scripts folder
+-A, --no-armscripts Don't run scripts from scripts_arm
+-t, --set-tftproot  Make a link at /stv/tftp pointing to \$target_path/boot
 EOF
 }
 
@@ -45,6 +48,9 @@ parse_params() {
     -v | --verbose) verbose=1 ;;
     -D | --no-download) export DOWNLOAD="no" ;; 
     -R | --no-ro-root) export RO_ROOT="no" ;;
+    -S | --no-script) noscript="yes" ;;
+    -A | --no-armscript) noarmscript="yes" ;;
+    -t | --set-tftproot) settftproot="yes" ;;
     -?*) die "Unknown option: $1" ;;
     *) break ;;
     esac
@@ -72,35 +78,39 @@ if [[ -n "${verbose-}" ]]; then
 	exit
 fi
 
-
-for script in "${script_dir}/scripts/"*; do
-	if [[ -x $script ]]; then
-		$script
-	fi
-done
-
-# copy qemu static emulator so we can use it to chroot into
-cp /usr/bin/qemu-arm-static "${TARGET_PATH}/usr/bin"
-
-# setup cleanup to clean mounts
-trap cleanup SIGINT SIGTERM ERR EXIT
-cleanup() {
-	trap - SIGINT SIGTERM ERR EXIT
-	echo Removing bind mounts
-	for path in dev/pts dev sys proc run; do umount "${TARGET_PATH}/$path"; done
-	umount "${TARGET_PATH}/scripts_arm"
-	rmdir "${TARGET_PATH}/scripts_arm"
-        exit
-}
-
-echo "Mounting dev dev/pts sys proc run inside '${TARGET_PATH}'"
-for path in dev dev/pts sys proc run; do mount --bind /$path "${TARGET_PATH}/${path}" ; done
-mkdir "${TARGET_PATH}/scripts_arm"
-mount --bind "${script_dir}/scripts_arm/" "${TARGET_PATH}/scripts_arm"
+if [[ "${noscript-}" != "yes" ]]; then
+	for script in "${script_dir}/scripts/"*; do
+		if [[ -x $script ]]; then
+			$script
+		fi
+	done
+fi
 
 
-for script in "${script_dir}/scripts_arm/"*; do
-	if [[ -x $script ]]; then
-		chroot "${TARGET_PATH}" "/scripts_arm/$(basename $script)"
-	fi
-done
+if [[ "${noarmscript-}" != "yes" ]]; then
+	# copy qemu static emulator so we can use it to chroot into
+	cp /usr/bin/qemu-arm-static "${TARGET_PATH}/usr/bin"
+	
+	# setup cleanup to clean mounts
+	trap cleanup SIGINT SIGTERM ERR EXIT
+	cleanup() {
+		trap - SIGINT SIGTERM ERR EXIT
+		echo Removing bind mounts
+		for path in dev/pts dev sys proc; do umount "${TARGET_PATH}/$path"; done
+		umount "${TARGET_PATH}/scripts_arm"
+		rmdir "${TARGET_PATH}/scripts_arm"
+	        exit
+	}
+	
+	echo "Mounting dev dev/pts sys proc inside '${TARGET_PATH}'"
+	for path in dev dev/pts sys proc; do mount --bind /$path "${TARGET_PATH}/${path}" ; done
+	mkdir "${TARGET_PATH}/scripts_arm"
+	mount --bind "${script_dir}/scripts_arm/" "${TARGET_PATH}/scripts_arm"
+	
+	
+	for script in "${script_dir}/scripts_arm/"*; do
+		if [[ -x $script ]]; then
+			chroot "${TARGET_PATH}" "/scripts_arm/$(basename $script)"
+		fi
+	done
+fi
