@@ -6,6 +6,11 @@ if [[ -z "${TARGET_PATH-}" ]]; then
 	exit 1
 fi
 
+if [[ -z "${RO_ROOT-}" ]]; then
+	echo >&2 -e "RO_ROOT not set!"
+	exit 1
+fi
+
 TARGET_PATH=$(realpath "${TARGET_PATH}")
 
 echo Disabling cron service 
@@ -51,3 +56,10 @@ rm "${TARGET_PATH}/etc/systemd/system/sockets.target.wants/avahi-daemon.socket"
 echo "Disabling sshswitch (service that turns on sshd if /boot/ssh is present)"
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/sshswitch.service"
 
+# when root is readonly it might be worthy to disable dhcp client
+if [[ "${RO_ROOT-}" == "yes" ]]; then
+	echo "Disabling dhcpcd"
+	rm "${TARGET_PATH}/etc/systemd/system/dhcpcd5.service"
+	rm -rf "${TARGET_PATH}/etc/systemd/system/dhcpcd.service.d/"
+	rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/dhcpcd.service"
+fi
