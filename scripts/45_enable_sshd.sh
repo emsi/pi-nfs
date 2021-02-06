@@ -7,10 +7,11 @@ fi
 
 TARGET_PATH=$(realpath "${TARGET_PATH}")
 
-# Disable key generation at boot and generate keys from nfs host
+echo Disabling key generation at first boot
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/regenerate_ssh_host_keys.service"
-ssh-keygen -A -v -f .
+echo Generating ssh keys
+ssh-keygen -A -v -f "${TARGET_PATH}"
 
-# Enable sshd
+echo Enabling sshd
 ln -sf /lib/systemd/system/ssh.service "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/ssh.service"
 
