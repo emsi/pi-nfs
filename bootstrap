@@ -78,3 +78,29 @@ for script in "${script_dir}/scripts/"*; do
 		$script
 	fi
 done
+
+# copy qemu static emulator so we can use it to chroot into
+cp /usr/bin/qemu-arm-static "${TARGET_PATH}/usr/bin"
+
+# setup cleanup to clean mounts
+trap cleanup SIGINT SIGTERM ERR EXIT
+cleanup() {
+	trap - SIGINT SIGTERM ERR EXIT
+	echo Removing bind mounts
+	for path in dev/pts dev sys proc run; do umount "${TARGET_PATH}/$path"; done
+	umount "${TARGET_PATH}/scripts_arm"
+	rmdir "${TARGET_PATH}/scripts_arm"
+        exit
+}
+
+echo "Mounting dev dev/pts sys proc run inside '${TARGET_PATH}'"
+for path in dev dev/pts sys proc run; do mount --bind /$path "${TARGET_PATH}/${path}" ; done
+mkdir "${TARGET_PATH}/scripts_arm"
+mount --bind "${script_dir}/scripts_arm/" "${TARGET_PATH}/scripts_arm"
+
+
+for script in "${script_dir}/scripts_arm/"*; do
+	if [[ -x $script ]]; then
+		chroot "${TARGET_PATH}" "/scripts_arm/$(basename $script)"
+	fi
+done
