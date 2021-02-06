@@ -15,6 +15,9 @@ ALLOW_NET="*"
 # should we enable readonly root filesystem with overlayfs in ram
 RO_ROOT="yes"
 
+# By default ask for 'pi' user new password
+PI_SETPASS="yes"
+
 # locale
 PI_KEYMAP="us"
 PI_LOCALE="C.UTF-8"

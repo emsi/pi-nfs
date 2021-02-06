@@ -9,20 +9,24 @@ export $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${script_dir}/E
 
 usage() {
   cat <<EOF
-Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-v] [-d] [-D] [-R] target_path
+Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-v] [-d] [-D] [-R] [-S] [-A] [-t] [-P] target_path
 
 Raspberry pi nfsroot bootstrap script.
 
 Available options:
 
--h, --help          Print this help and exit
--v, --verbose       Print verbose info (implies dry run)
--d, --debug         Print debug (each run command)
--D, --no-download   Don't download new dist files (fils if not previously downloaded)
--R, --no-ro-root    Don't enable read only root with overlay
--S, --no-scripts    Don't run scripts from scripts folder
--A, --no-armscripts Don't run scripts from scripts_arm
--t, --set-tftproot  Make a link at /stv/tftp pointing to \$target_path/boot
+-h, --help           Print this help and exit
+-v, --verbose        Print verbose info (implies dry run)
+-d, --debug          Print debug (each run command)
+-D, --no-download    Don't download new dist files (fils if not previously downloaded)
+-R, --no-ro-root     Don't enable read only root with overlay
+-S, --no-scripts     Don't run scripts from scripts folder
+-A, --no-armscripts  Don't run scripts from scripts_arm
+-t, --set-tftproot   Make a link at /stv/tftp pointing to \$target_path/boot
+-P, --no-passwd      Don't prompt for new 'pi' user password
+                     Leaving default password is UNSECURE (unless --githubuser is used)
+    --githubuser     Add github user public keys (downloaded from https://github.com/[githubuser].keys)
+                     to 'pi' user ~/.ssh/authorized_keys (implies --no-passwd)
 EOF
 }
 
@@ -51,6 +55,12 @@ parse_params() {
     -S | --no-script) noscript="yes" ;;
     -A | --no-armscript) noarmscript="yes" ;;
     -t | --set-tftproot) settftproot="yes" ;;
+    -P | --no-passwd) export PI_SETPASS="no" ;;
+    --githubuser) 
+	    githubuser="${2-}"
+	    PI_SETPASS="no"
+	    shift
+	    ;;
     -?*) die "Unknown option: $1" ;;
     *) break ;;
     esac
@@ -114,6 +124,18 @@ if [[ "${noarmscript-}" != "yes" ]]; then
 		fi
 	done
 fi
+
+if [[ -n ${githubuser-} ]]; then
+	PI_SSH_PATH="${TARGET_PATH}/home/pi/.ssh"
+	echo "Downloading and installing ssh keys for '${githubuser}' github user"
+	mkdir -p "${PI_SSH_PATH}"
+	curl "https://github.com/${githubuser}.keys" -o "${PI_SSH_PATH}/authorized_keys"
+	chmod 600 "${PI_SSH_PATH}/authorized_keys"
+	chown -R 1000:1000 "${PI_SSH_PATH}"
+	echo "Disabling password login"
+	sed -i -e 's/^pi:\$[^:]\+\(:.*\)$/pi:*\1/' "${TARGET_PATH}/etc/shadow"
+fi
+
 
 if [[ "${settftproot-}" == "yes" ]]; then
 	echo "Making a link at /srv/tftp pointing to '${TARGET_PATH}/boot'"
