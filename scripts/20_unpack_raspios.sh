@@ -1,4 +1,5 @@
 #!/bin/bash
+set -Eeuo pipefail
 
 if [[ -z "${TARGET_PATH-}" ]]; then
 	echo >&2 -e "TARGET_PATH not set!"
