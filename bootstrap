@@ -105,6 +105,7 @@ if [[ "${noarmscript-}" != "yes" ]]; then
 	trap cleanup SIGINT SIGTERM ERR EXIT
 	cleanup() {
 		trap - SIGINT SIGTERM ERR EXIT
+		echo
 		echo Removing bind mounts
 		for path in dev/pts dev sys proc; do umount "${TARGET_PATH}/$path"; done
 		umount "${TARGET_PATH}/scripts_arm"
