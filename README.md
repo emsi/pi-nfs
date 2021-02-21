@@ -1,19 +1,23 @@
 # pi-nfs
 
-Tool to make pi boot from network
+Tool to setup server that pi can use to boot off.
 
-It's main purpose is to setup netbooted kiosk but can be easily modied and extended to bootstrap other configurations.
-Among some of its unique features is allowing pi to boot with read only root filesystem with overlay (this can be be of course tuned).
-All custimizations are stored in scripts and thus cen easily be examined and altered.
-It works only on Ubuntu/debian hosts running on x64 CPU. We'll call it 'the server' :)
+It's main purpose is to setup netbooted kiosk but can be easily modified and extended to bootstrap other configurations.
+Among some of its unique features is allowing pi to boot with read only root filesystem with overlay (this can be of course rurned off).
+All custimizations are stored in scripts and thus can easily be examined and altered.
+It works only on Ubuntu/debian hosts running on x64 CPU. We'll call it 'the server' futher on :) We assume that the server will host both tftp and nfs root (both will be installed and configured by this script).
 
+## assumptions
+1. You have raspberry pi 4 or later capable of bootign from network (see https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md for boot options). Use `sudo rpi-eeprom-config -e` to modify your pi firmware bootloader (don't forget to reboot from sd card after the change so pi can feed the changes).
+2. You have configured pi to boot from network using tftp either by configuring your dhcp server and pointing to 'the server' or flashing the firmware with appropriate value of `TFTP_IP`.
+3. You may find it convenient to set `TFTP_PREFIX=1` and leave `TFTP_PREFIX_STR` blank. This way all pis will boot from root of tftp server and the same configuration (which is acceptable for kiosks).
 
 ## configuration
 First thing you need to do is edit the ENV file and set appropriate options. The most important is `NFS_IP=` variable specifying the server's IP facing the raspberries to be booted. 
 
 ## bootsrap
 
-`bootstrap` script is the central part of the solution. Its main job is to load convifuration from `ENV` file and execute scripts from `scripts` and `scripts_arm` directories. Scripts from former are executed directly on the server while scripts form latter are executed using arm emulation and chroot within target raspios image allowing us for greater customizations like installing packages or executing system tools.
+`bootstrap` script is the central part of the solution. Its main job is to load configuration from `ENV` file and execute scripts from `scripts` and `scripts_arm` directories. Scripts from former are executed directly on the server while scripts form latter are executed using arm emulation and chroot into target raspios image allowing us for greater customizations like installing packages or executing system tools.
 
 ### options
 boostrap has one required positional argument, the path to directory that will be filled with bootstraped raspios image and several switches:
@@ -50,6 +54,7 @@ Available options:
 To bootstrap to `/raspios_lite` run:
 `sudo ./bootstrap /raspios_lite/`
 Once all oparations and customizations are done user is prompted for pi user password. Alternatively ssh public keys can be obtained from github's user oublic keys link (https://github.com/[githubuser].keys) using --githubuser  option with an argument. 
+If `-t` switch is used `bootstrap` will create a link at /srv/tftp pointing to `boot` of our target directory.
 
 ## scripts
 Make sure to examine the scrpts in both `scripts` and `scrupts_arm` directories. 
