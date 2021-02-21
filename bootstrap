@@ -18,7 +18,7 @@ Available options:
 -h, --help           Print this help and exit
 -v, --verbose        Print verbose info (implies dry run)
 -d, --debug          Print debug (each run command)
--D, --no-download    Don't download new dist files (fils if not previously downloaded)
+-D, --no-download    Don't download new dist files (fails if not previously downloaded)
 -R, --no-ro-root     Don't enable read only root with overlay
 -S, --no-scripts     Don't run scripts from scripts folder
 -A, --no-armscripts  Don't run scripts from scripts_arm
