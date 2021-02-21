@@ -18,6 +18,10 @@ RO_ROOT="yes"
 # By default ask for 'pi' user new password
 PI_SETPASS="yes"
 
+# Disable Wi-Fi and or Bluetooth
+DISABLE_WIFI="yes"
+DISABLE_BT="yes"
+
 # locale
 PI_KEYMAP="us"
 PI_LOCALE="C.UTF-8"

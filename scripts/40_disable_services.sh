@@ -38,16 +38,26 @@ echo Disabling triggerhappy
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/triggerhappy.service"
 rm "${TARGET_PATH}/etc/systemd/system/sockets.target.wants/triggerhappy.socket"
 
-echo Disabling WIFI and BT
-rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/wpa_supplicant.service"
-rm "${TARGET_PATH}/etc/systemd/system/bluetooth.target.wants/bluetooth.service"
-rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/hciuart.service"
-cat > "${TARGET_PATH}/etc/modprobe.d/raspi-blacklist.conf" <<EOF
+echo Disabling Wi-Fi
+if [[ "${DISABLE_WIFI-}" == "yes" ]]; then
+	rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/wpa_supplicant.service"
+	rm "${TARGET_PATH}/etc/profile.d/wifi-check.sh"
+	cat > "${TARGET_PATH}/etc/modprobe.d/raspi-blacklist.conf" <<EOF
 blacklist brcmfmac
 blacklist brcmutil
+EOF
+fi
+
+
+echo Disabling BT
+if [[ "${DISABLE_BT-}" == "yes" ]]; then
+	rm "${TARGET_PATH}/etc/systemd/system/bluetooth.target.wants/bluetooth.service"
+	rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/hciuart.service"
+	cat > "${TARGET_PATH}/etc/modprobe.d/raspi-blacklist.conf" <<EOF
 blacklist btbcm
 blacklist hci_uart
 EOF
+fi
 
 echo Disabling avahi multicast DNS
 rm "${TARGET_PATH}/etc/systemd/system/multi-user.target.wants/avahi-daemon.service"
