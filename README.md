@@ -13,9 +13,10 @@ First thing you need to do is edit the ENV file and set appropriate options. The
 
 ## bootsrap
 
-`bootstrap` script is the central part of the solution. Its main job is to load convifuration from `ENV` file and execute scripts from `scripts` and `scripts_arm` directories. It has one required positional argument, the path to directory that will be filled with ootstraped raspios image.
+`bootstrap` script is the central part of the solution. Its main job is to load convifuration from `ENV` file and execute scripts from `scripts` and `scripts_arm` directories. Scripts from former are executed directly on the server while scripts form latter are executed using arm emulation and chroot within target raspios image allowing us for greater customizations like installing packages or executing system tools.
 
 ### options
+boostrap has one required positional argument, the path to directory that will be filled with bootstraped raspios image and several switches:
 ```
 $ ./bootstrap -h
 Usage: bootstrap [-h] [-v] [-d] [-D] [-R] [-S] [-A] [-t] [-P] target_path
@@ -48,5 +49,7 @@ Available options:
 ### example 
 To bootstrap to `/raspios_lite` run:
 `sudo ./bootstrap /raspios_lite/`
+Once all oparations and customizations are done user is prompted for pi user password. Alternatively ssh public keys can be obtained from github's user oublic keys link (https://github.com/[githubuser].keys) using --githubuser  option with an argument. 
 
-
+## scripts
+Make sure to examine the scrpts in both `scripts` and `scrupts_arm` directories. 
