@@ -50,6 +50,7 @@ fi
 
 echo Disabling root filesystem resize on first boot
 rm "${TARGET_PATH}/etc/rc3.d/S01resize2fs_once"
+rm "${TARGET_PATH}/etc/init.d/resize2fs_once"
 
 echo Setting up fstab
 # clean fstab (without refference to sd card)
