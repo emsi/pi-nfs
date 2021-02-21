@@ -18,15 +18,22 @@ Available options:
 -h, --help           Print this help and exit
 -v, --verbose        Print verbose info (implies dry run)
 -d, --debug          Print debug (each run command)
--D, --no-download    Don't download new dist files (fails if not previously downloaded)
+-D, --no-download    Don't download new dist files (fails if not previously
+                     downloaded)
 -R, --no-ro-root     Don't enable read only root with overlay
 -S, --no-scripts     Don't run scripts from scripts folder
 -A, --no-armscripts  Don't run scripts from scripts_arm
 -t, --set-tftproot   Make a link at /stv/tftp pointing to \$target_path/boot
 -P, --no-passwd      Don't prompt for new 'pi' user password
-                     Leaving default password is UNSECURE (unless --githubuser is used)
-    --githubuser     Add github user public keys (downloaded from https://github.com/[githubuser].keys)
+                     Leaving default password is UNSECURE (unless --githubuser
+                     is used)
+    --githubuser     Add github user public keys (downloaded from
+                     https://github.com/[githubuser].keys)
                      to 'pi' user ~/.ssh/authorized_keys (implies --no-passwd)
+    --arm-shell      Drop me into shell inside chrooted target location wsung
+                     arm emulation. It happenes at the very end, right before
+		     making tftp link (if requested). If you want to just drop
+                     into shell use together with -D -S -A options.
 EOF
 }
 
@@ -60,6 +67,9 @@ parse_params() {
 	    githubuser="${2-}"
 	    PI_SETPASS="no"
 	    shift
+	    ;;
+    --arm-shell)
+	    armshell="yes"
 	    ;;
     -?*) die "Unknown option: $1" ;;
     *) break ;;
@@ -96,11 +106,10 @@ if [[ "${noscript-}" != "yes" ]]; then
 	done
 fi
 
-
-if [[ "${noarmscript-}" != "yes" ]]; then
+if [[ "${noarmscript-}" != "yes" || "${armshell-}" == "yes" ]]; then
 	# copy qemu static emulator so we can use it to chroot into
 	cp /usr/bin/qemu-arm-static "${TARGET_PATH}/usr/bin"
-	
+
 	# setup cleanup to clean mounts
 	trap cleanup SIGINT SIGTERM ERR EXIT
 	cleanup() {
@@ -115,15 +124,24 @@ if [[ "${noarmscript-}" != "yes" ]]; then
 	
 	echo "Mounting dev dev/pts sys proc inside '${TARGET_PATH}'"
 	for path in dev dev/pts sys proc; do mount --bind /$path "${TARGET_PATH}/${path}" ; done
-	mkdir "${TARGET_PATH}/scripts_arm"
+
+	# mounting scripts even if we won't use them
+	# it simplifies cleanup plus lets us to inspect the scripts
+	# from within the chroot
+	mkdir -p "${TARGET_PATH}/scripts_arm"
 	mount --bind "${script_dir}/scripts_arm/" "${TARGET_PATH}/scripts_arm"
-	
-	
+fi
+
+if [[ "${noarmscript-}" != "yes" ]]; then
 	for script in "${script_dir}/scripts_arm/"*; do
 		if [[ -x $script ]]; then
 			chroot "${TARGET_PATH}" "/scripts_arm/$(basename $script)"
 		fi
 	done
+fi
+
+if [[ "${armshell-}" == "yes" ]]; then
+	chroot "${TARGET_PATH}" /bin/bash
 fi
 
 if [[ -n ${githubuser-} ]]; then
