@@ -11,6 +11,16 @@ if [[ -z "${RO_ROOT-}" ]]; then
 	exit 1
 fi
 
+if [[ -z "${DISABLE_WIFI-}" ]]; then
+	echo >&2 -e "DISABLE_WIFI not set!"
+	exit 1
+fi
+
+if [[ -z "${DISABLE_BT-}" ]]; then
+	echo >&2 -e "DISABLE_BT not set!"
+	exit 1
+fi
+
 TARGET_PATH=$(realpath "${TARGET_PATH}")
 
 echo Disabling cron service 
