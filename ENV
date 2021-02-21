@@ -12,7 +12,9 @@ NFS_IP="10.168.1.41"
 # examples are: *, *.local.domain, 192.168.0.0/24, 2001:db8:9:e54::/64 etc.
 ALLOW_NET="*"
 
-# should we enable readonly root filesystem with overlayfs in ram
+# Should we enable readonly root filesystem with overlayfs in ram?
+# If not set to "yes" it will produce nfs export that is writable
+# thus cannot be shared with multiple raspberries.
 RO_ROOT="yes"
 
 # When readonly root is on there happenes to be one problem,
