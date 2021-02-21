@@ -21,6 +21,11 @@ if [[ -z "${SPI_ON-}" ]]; then
 	exit 1
 fi
 
+if [[ -z "${ENABLE_NETFLAPDOG=-}" ]]; then
+	echo >&2 -e "ENABLE_NETFLAPDOG not set!"
+	exit 1
+fi
+
 TARGET_PATH=$(realpath "${TARGET_PATH}")
 
 if [[ "${RO_ROOT-}" == "yes" ]]; then
@@ -31,6 +36,9 @@ if [[ "${RO_ROOT-}" == "yes" ]]; then
 	curl https://gist.githubusercontent.com/emsi/3c7143f0583566aad14bad182297a104/raw/ -o "${TARGET_PATH}/bin/ro-root.sh"
 	chmod +x "${TARGET_PATH}/bin/ro-root.sh"
 
+fi
+
+if [[ "${ENABLE_NETFLAPDOG-}" == "yes" ]]; then
 	echo Installing netflap reboot watchdog script
 	curl https://gist.githubusercontent.com/emsi/899505583dcaeda65b9bab2d5dee9008/raw/netflapdog.py -o "${TARGET_PATH}/bin/netflapdog.py"
 	chmod +x "${TARGET_PATH}/bin/netflapdog.py"
