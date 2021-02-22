@@ -23,6 +23,9 @@ fi
 EOF
 
 cat > /home/kiosk/.xinitrc <<EOF
+xset s noblank
+xset s off
+xset -dpms
 chromium-browser  --window-size=1920,1080 \
   --window-position=0,0 \
   --start-fullscreen \
