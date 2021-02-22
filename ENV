@@ -53,9 +53,9 @@ PI_KEYMAP="us"
 PI_LOCALE="C.UTF-8"
 PI_TIMEZONE="Europe/Warsaw"
 
-# config.txt options
-# Enabling SPI
-SPI_ON="yes"
+# when set to yes bootstrap will install custom config.txt from
+# pi-nfs home directory instead of original one
+CUSTOM_CONFIG="yes"
 
 # DEBUG/SPECIAL variables
 # DO NOT modify unless you kow what are you doing!

@@ -16,8 +16,8 @@ if [[ -z "${NFSROOT-}" ]]; then
 	exit 1
 fi
 
-if [[ -z "${SPI_ON-}" ]]; then
-	echo >&2 -e "NFSROOT not set!"
+if [[ -z "${CUTOM_CONFIG-}" ]]; then
+	echo >&2 -e "CUSTOM_CONFIG not set!"
 	exit 1
 fi
 
@@ -51,9 +51,9 @@ fi
 echo Customizing cmdline.txt
 echo "console=serial0,115200 console=tty1 rootwait ro nfsroot=${NFSROOT},v3 ip=dhcp root=/dev/nfs elevator=deadline plymouth.ignore-serial-consoles ${INIT-}" > "${TARGET_PATH}/boot/cmdline.txt"
 
-echo Customizing config.txt
-if [[ "${SPI_ON-}" == "yes" ]]; then
-	sed -i -e 's/^#\(dtparam=spi=on\)/\1/' "${TARGET_PATH}/boot/config.txt"
+if [[ "${CUSTOM_CONFIG-}" == "yes" ]]; then
+	echo Installin custom config.txt
+	cp -a "${SOURCE_PATH}/config.txt" "${TARGET_PATH}/boot/config.txt"
 fi
 
 echo Disabling root filesystem resize on first boot

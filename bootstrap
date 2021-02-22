@@ -20,7 +20,6 @@ Available options:
 -d, --debug          Print debug (each run command)
 -D, --no-download    Don't download new dist files (fails if not previously
                      downloaded)
--R, --no-ro-root     Don't enable read only root with overlay
 -S, --no-scripts     Don't run scripts from scripts folder
 -A, --no-armscripts  Don't run scripts from scripts_arm
 -t, --set-tftproot   Make a link at /stv/tftp pointing to \$target_path/boot
@@ -58,7 +57,6 @@ parse_params() {
     -d | --debug) set -x ;;
     -v | --verbose) verbose=1 ;;
     -D | --no-download) export DOWNLOAD="no" ;; 
-    -R | --no-ro-root) export RO_ROOT="no" ;;
     -S | --no-script) noscript="yes" ;;
     -A | --no-armscript) noarmscript="yes" ;;
     -t | --set-tftproot) settftproot="yes" ;;
@@ -90,6 +88,7 @@ parse_params "$@"
 
 TARGET_PATH="${args[0]}"
 export TARGET_PATH=$(realpath "${TARGET_PATH}")
+export SOURCE_PATH=$(realpath "${script_dir}")
 NFSROOT="${NFS_IP}:${TARGET_PATH}"
 
 if [[ -n "${verbose-}" ]]; then
