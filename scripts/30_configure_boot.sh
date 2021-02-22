@@ -16,7 +16,7 @@ if [[ -z "${NFSROOT-}" ]]; then
 	exit 1
 fi
 
-if [[ -z "${CUTOM_CONFIG-}" ]]; then
+if [[ -z "${CUSTOM_CONFIG-}" ]]; then
 	echo >&2 -e "CUSTOM_CONFIG not set!"
 	exit 1
 fi
