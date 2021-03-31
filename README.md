@@ -3,7 +3,7 @@
 Tool to setup server that pi can use to boot off.
 
 It's main purpose is to setup netbooted kiosk but can be easily modified and extended to bootstrap other configurations.
-Among some of its unique features is allowing pi to boot with read only root filesystem with overlay (this can be of course rurned off).
+Among some of its unique features is allowing pi to boot with read only root filesystem with overlay (this can be of course turned off).
 All custimizations are stored in scripts and thus can easily be examined and altered.
 It works only on Ubuntu/debian hosts running on x64 CPU. We'll call it 'the server' futher on :) We assume that the server will host both tftp and nfs root (both will be installed and configured by this script).
 
