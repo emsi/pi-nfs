@@ -2,10 +2,17 @@
 
 set -Eeuo pipefail
 
-# read default env
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
-. "${script_dir}/ENV"
-export $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${script_dir}/ENV")
+
+parse_env_file(){
+  env_file="${script_dir}/$1"
+  # read env file
+  # shellcheck source=ENV
+  . "${env_file}"
+  # export variables from env file
+  # shellcheck disable=SC2046
+  export $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${env_file}")
+}
 
 usage() {
   cat <<EOF
@@ -29,9 +36,9 @@ Available options:
     --githubuser     Add github user public keys (downloaded from
                      https://github.com/[githubuser].keys)
                      to 'pi' user ~/.ssh/authorized_keys (implies --no-passwd)
-    --arm-shell      Drop me into shell inside chrooted target location wsung
-                     arm emulation. It happenes at the very end, right before
-		     making tftp link (if requested). If you want to just drop
+    --arm-shell      Drop me into shell inside chrooted target location using
+                     arm emulation. It happens at the very end, right before
+                     making tftp link (if requested). If you want to just drop
                      into shell use together with -D -S -A options.
 EOF
 }
@@ -61,7 +68,7 @@ parse_params() {
     -A | --no-armscript) noarmscript="yes" ;;
     -t | --set-tftproot) settftproot="yes" ;;
     -P | --no-passwd) export PI_SETPASS="no" ;;
-    --githubuser) 
+    --githubuser)
 	    githubuser="${2-}"
 	    PI_SETPASS="no"
 	    shift
@@ -83,15 +90,26 @@ parse_params() {
   return 0
 }
 
+# main script starts here
+
+parse_env_file "ENV"
+if [[ -e "${script_dir}/.ENV" && -r "${script_dir}/.ENV" ]];then
+  parse_env_file ".ENV"
+fi
+
 parse_params "$@"
 
 
 TARGET_PATH="${args[0]}"
-export TARGET_PATH=$(realpath "${TARGET_PATH}")
-export SOURCE_PATH=$(realpath "${script_dir}")
+TARGET_PATH=$(realpath "${TARGET_PATH}")
+export TARGET_PATH
+SOURCE_PATH=$(realpath "${script_dir}")
+export SOURCE_PATH
 NFSROOT="${NFS_IP}:${TARGET_PATH}"
+export NFSROOT
 
 if [[ -n "${verbose-}" ]]; then
+	# shellcheck disable=SC2046
 	env | grep $(sed -e '/^[^=]\+=[^=]*$/!d' -e 's/^\([^=]\+\)=.*$/\1/' "${script_dir}/ENV" | sed -e ':a; N; $!ba; s/\n/\\\|/g')
 
 	exit
