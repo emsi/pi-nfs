@@ -36,9 +36,9 @@ Available options:
     --githubuser     Add github user public keys (downloaded from
                      https://github.com/[githubuser].keys)
                      to 'pi' user ~/.ssh/authorized_keys (implies --no-passwd)
-    --arm-shell      Drop me into shell inside chrooted target location wsung
-                     arm emulation. It happenes at the very end, right before
-		     making tftp link (if requested). If you want to just drop
+    --arm-shell      Drop me into shell inside chrooted target location using
+                     arm emulation. It happens at the very end, right before
+                     making tftp link (if requested). If you want to just drop
                      into shell use together with -D -S -A options.
 EOF
 }
